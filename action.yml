@@ -73,7 +73,15 @@ runs:
         if [ -n "${{ inputs.junit-glob }}" ]; then
           JUNIT_GLOB="--junit-glob '${{ inputs.junit-glob }}'"
         fi
-        TESTS=$(java -jar split-tests-java.jar --split-index ${{ inputs.split-index }} --split-total ${{ inputs.split-total }} --glob '${{ inputs.glob }}' ${EXCLUDE_GLOB} ${JUNIT_GLOB} --format ${{ inputs.format }} --average-time ${{ inputs.average-time }} --debug ${{ inputs.debug }})
+        AVERAGE_TIME=""
+        if [ -n "${{ inputs.average-time }}" ]; then
+          AVERAGE_TIME="--average-time"
+        fi
+        DEBUG=""
+        if [ -n "${{ inputs.debug }}" ]; then
+          DEBUG="--debug"
+        fi
+        TESTS=$(java -jar split-tests-java.jar --split-index ${{ inputs.split-index }} --split-total ${{ inputs.split-total }} --glob '${{ inputs.glob }}' ${EXCLUDE_GLOB} ${JUNIT_GLOB} --format ${{ inputs.format }} ${AVERAGE_TIME} ${DEBUG}
         echo "This runner will execute the following tests: $TESTS"
         echo "test-suite=${TESTS}" >> $GITHUB_OUTPUT
 branding:
