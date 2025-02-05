@@ -48,7 +48,7 @@ inputs:
 outputs:
   test-suite:
     description: A subset of tests, based on the the split index and split type
-    value: ${{ steps.split-tests.outputs.test-suite }}
+    value: ${{ steps.split-tests-java.outputs.test-suite }}
   split-total:
     description: Total number of instances executing the tests
     value: ${{ inputs.split-total }}
