@@ -1,0 +1,28 @@
+name: Generate Split Index JSON
+author: donnerbart@users.noreply.github.com
+description: Generates a split index JSON from a total number of splits
+inputs:
+  split-total:
+    description: Total number of instances executing the tests (integer)
+    required: true
+outputs:
+  split-total:
+    description: Total number of instances executing the tests
+    value: ${{ inputs.split-total }}
+  split-index-json:
+    description: List of split indexes as JSON
+    value: ${{ steps.generate-index-list.outputs.split-index-list }}
+runs:
+  using: composite
+  steps:
+    - name: Generate split index list
+      id: generate-index-list
+      shell: bash
+      run: |
+        MAX_INDEX=$((${{ inputs.split-total }}-1))
+        INDEX_LIST=$(seq 0 ${MAX_INDEX})
+        INDEX_JSON=$(jq --null-input --compact-output '. |= [inputs]' <<< ${INDEX_LIST})
+        echo "split-index-list=${INDEX_JSON}" >> "$GITHUB_OUTPUT"
+branding:
+  icon: list
+  color: yellow

@@ -1,0 +1,62 @@
+# @actions/split-tests-java
+
+Divides a test suite into groups with equal execution time, based on prior test timings.
+
+This ensures optimal parallel execution. Since test file runtimes can vary significantly, splitting them evenly without
+considering timing may result in inefficient grouping.
+
+## Usage
+
+```yaml
+env:
+  split-total: 10
+jobs:
+  generate-split-index-json:
+    name: Generate split indexes
+    runs-on: ubuntu-latest
+    outputs:
+      json: ${{ steps.generate.outputs.split-index-json }}
+    steps:
+      - name: Generate split index list 
+        id: generate
+        uses: actions/split-tests-java/generate-split-index-json
+        with:
+          split-total: ${{ env.split-total }}
+
+  integration-test:
+    name: "Test #${{ matrix.split-index }}"
+    runs-on: ubuntu-latest
+    needs:
+      - generate-split-index-json
+    strategy:
+      fail-fast: false
+      matrix:
+        split-index: ${{ fromjson(needs.generate-split-index-json.outputs.json) }}
+    steps:
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Split tests
+        id: split-tests
+        uses: actions/split-tests-java
+        with:
+          split-index: ${{ matrix.split-index }}
+          split-total: ${{ env.split-total }}
+          glob: '**/helm-charts/tests-hivemq-operator/**/*IT.java'
+          junit-glob: '**/junit-reports/*.xml'
+          format: 'gradle'
+          averageTime: true
+          debug: true
+      - name: Run HiveMQ Legacy Operator integration tests
+        working-directory: helm-charts
+        env:
+          K8S_VERSION_TYPE: ${{ matrix.k8s-version-type }}
+        run: ./gradlew :tests-hivemq-operator:integrationTest ${{ steps.split-tests.outputs.test-suite }}        
+      - name: Upload JUnit report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-xml-reports-${{ matrix.split-index }}
+          path: '**/test-results/integrationTest/*.xml'
+```
