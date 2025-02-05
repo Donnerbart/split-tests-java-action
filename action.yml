@@ -31,7 +31,7 @@ inputs:
       - list
       - gradle
     default: 'list'
-  averageTime:
+  average-time:
     description: Use the average test time from tests with JUnit reports for tests without JUnit reports (boolean)
     required: false
     type: boolean
