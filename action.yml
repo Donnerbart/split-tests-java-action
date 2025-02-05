@@ -36,7 +36,7 @@ inputs:
     required: false
     type: boolean
     default: false
-  workingDirectory:
+  working-directory:
     description: The working directory. Defaults to the current directory (string)
     type: string
     required: false
