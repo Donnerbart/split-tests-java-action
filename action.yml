@@ -81,7 +81,7 @@ runs:
         if [ -n "${{ inputs.debug }}" ]; then
           DEBUG="--debug"
         fi
-        TESTS=$(java -jar split-tests-java.jar --split-index ${{ inputs.split-index }} --split-total ${{ inputs.split-total }} --glob '${{ inputs.glob }}' ${EXCLUDE_GLOB} ${JUNIT_GLOB} --format ${{ inputs.format }} ${AVERAGE_TIME} ${DEBUG}
+        TESTS=$(java -jar split-tests-java.jar --split-index ${{ inputs.split-index }} --split-total ${{ inputs.split-total }} --glob '${{ inputs.glob }}' ${EXCLUDE_GLOB} ${JUNIT_GLOB} --format ${{ inputs.format }} ${AVERAGE_TIME} ${DEBUG})
         echo "This runner will execute the following tests: $TESTS"
         echo "test-suite=${TESTS}" >> $GITHUB_OUTPUT
 branding:
