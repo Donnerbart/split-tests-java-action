@@ -44,19 +44,34 @@ jobs:
         with:
           split-index: ${{ matrix.split-index }}
           split-total: ${{ env.split-total }}
-          glob: '**/helm-charts/tests-hivemq-operator/**/*IT.java'
+          glob: '**/src/integrationTest/**/*IT.java'
           junit-glob: '**/junit-reports/*.xml'
           format: 'gradle'
           averageTime: true
           debug: true
-      - name: Run HiveMQ Legacy Operator integration tests
+      - name: Run integration tests
         working-directory: helm-charts
         env:
           K8S_VERSION_TYPE: ${{ matrix.k8s-version-type }}
-        run: ./gradlew :tests-hivemq-operator:integrationTest ${{ steps.split-tests.outputs.test-suite }}        
+        run: ./gradlew :integrationTest ${{ steps.split-tests.outputs.test-suite }}        
       - name: Upload JUnit report artifact
         uses: actions/upload-artifact@v4
         with:
           name: junit-xml-reports-${{ matrix.split-index }}
           path: '**/test-results/integrationTest/*.xml'
+
+  merge-junit-reports:
+    runs-on: ubuntu-latest
+    name: "Merge JUnit reports"
+    needs:
+      - integration-test
+    permissions:
+      contents: write
+    steps:
+      - name: Merge JUnit reports
+        uses: donnerbart/split-tests-java-action/merge-junit-reports@v1
+        with:
+          git-branch: junit-reports/${{ github.base_ref }}
+          artifact-name: junit-xml-reports
+          split-artifact-pattern: junit-xml-reports-*
 ```
