@@ -65,23 +65,27 @@ runs:
       id: split-tests-java
       shell: bash
       run: |
-        EXCLUDE_GLOB=""
+        COMMAND="java -jar split-tests-java.jar --split-index ${{ inputs.split-index }} --split-total ${{ inputs.split-total }} --glob ${{ inputs.glob }}"
         if [ -n "${{ inputs.exclude-glob }}" ]; then
-          EXCLUDE_GLOB="--exclude-glob '${{ inputs.exclude-glob }}'"
+          COMMAND="$COMMAND --exclude-glob ${{ inputs.exclude-glob }}"
         fi
-        JUNIT_GLOB=""
         if [ -n "${{ inputs.junit-glob }}" ]; then
-          JUNIT_GLOB="--junit-glob '${{ inputs.junit-glob }}'"
+          COMMAND="$COMMAND --junit-glob ${{ inputs.junit-glob }}"
         fi
-        AVERAGE_TIME=""
+        if [ -n "${{ inputs.format }}" ]; then
+          COMMAND="$COMMAND --format ${{ inputs.format }}"
+        fi
         if [ -n "${{ inputs.average-time }}" ]; then
-          AVERAGE_TIME="--average-time"
+          COMMAND="$COMMAND --average-time"
         fi
-        DEBUG=""
+        if [ -n "${{ inputs.working-directory }}"; then
+          COMMAND="$COMMAND --working-directory ${{ inputs.working-directory }}"
+        fi
         if [ -n "${{ inputs.debug }}" ]; then
-          DEBUG="--debug"
+          COMMAND="$COMMAND --debug"
         fi
-        TESTS=$(java -jar split-tests-java.jar --split-index ${{ inputs.split-index }} --split-total ${{ inputs.split-total }} --glob '${{ inputs.glob }}' ${EXCLUDE_GLOB} ${JUNIT_GLOB} --format ${{ inputs.format }} ${AVERAGE_TIME} ${DEBUG})
+        echo "Command: $COMMAND"
+        TESTS=$($COMMAND)
         echo "This runner will execute the following tests: $TESTS"
         echo "test-suite=${TESTS}" >> $GITHUB_OUTPUT
 branding:
