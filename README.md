@@ -8,6 +8,14 @@ considering timing may result in inefficient grouping.
 ## Usage
 
 ```yaml
+name: Integration Tests
+on:
+  pull_request:
+    branches: '**'
+  workflow_dispatch:
+concurrency:
+  group: integration-test-${{ github.ref }}
+  cancel-in-progress: true
 env:
   split-total: 10
 jobs:
@@ -24,7 +32,7 @@ jobs:
           split-total: ${{ env.split-total }}
 
   integration-test:
-    name: "Test #${{ matrix.split-index }}"
+    name: 'Split #${{ matrix.split-index }}'
     runs-on: ubuntu-latest
     needs:
       - generate-split-index-json
@@ -73,8 +81,8 @@ jobs:
           path: '**/test-results/integrationTest/*.xml'
 
   merge-junit-reports:
+    name: Merge JUnit reports
     runs-on: ubuntu-latest
-    name: "Merge JUnit reports"
     needs:
       - integration-test
     permissions:
