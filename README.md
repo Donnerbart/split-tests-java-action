@@ -59,6 +59,9 @@ jobs:
           distribution: temurin
           java-version: 21
 
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
       - name: Split tests
         id: split-tests
         uses: donnerbart/split-tests-java-action@v1
