@@ -78,7 +78,7 @@ runs:
         if [ -n "${{ inputs.average-time }}" ]; then
           COMMAND="$COMMAND --average-time"
         fi
-        if [ -n "${{ inputs.working-directory }}"; then
+        if [ -n "${{ inputs.working-directory }}" ]; then
           COMMAND="$COMMAND --working-directory ${{ inputs.working-directory }}"
         fi
         if [ -n "${{ inputs.debug }}" ]; then
