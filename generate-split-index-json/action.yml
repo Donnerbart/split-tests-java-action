@@ -1,6 +1,9 @@
 name: Generate Split Index JSON
 author: donnerbart@users.noreply.github.com
 description: Generates a split index JSON from a total number of splits
+branding:
+  icon: list
+  color: blue
 inputs:
   split-total:
     description: Total number of instances executing the tests (integer)
@@ -23,6 +26,3 @@ runs:
         INDEX_LIST=$(seq 0 ${MAX_INDEX})
         INDEX_JSON=$(jq --null-input --compact-output '. |= [inputs]' <<< ${INDEX_LIST})
         echo "split-index-list=${INDEX_JSON}" >> "$GITHUB_OUTPUT"
-branding:
-  icon: list
-  color: blue

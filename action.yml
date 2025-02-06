@@ -1,6 +1,9 @@
 name: Split Tests Java
 author: donnerbart@users.noreply.github.com
 description: Splits a JUnit test suite for parallelization with equal time
+branding:
+  icon: shuffle
+  color: blue
 inputs:
   split-index:
     description: Index of this instance executing the tests (integer)
@@ -30,7 +33,7 @@ inputs:
     options:
       - list
       - gradle
-    default: 'list'
+    default: list
   average-time:
     description: Use the average test time from tests with JUnit reports for tests without JUnit reports (boolean)
     required: false
@@ -88,6 +91,3 @@ runs:
         TESTS=$($COMMAND)
         echo "This runner will execute the following tests: $TESTS"
         echo "test-suite=${TESTS}" >> $GITHUB_OUTPUT
-branding:
-  icon: shuffle
-  color: blue

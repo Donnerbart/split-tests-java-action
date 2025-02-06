@@ -1,6 +1,9 @@
 name: Merge JUnit reports
 author: donnerbart@users.noreply.github.com
 description: Merges the JUnit reports from the test split jobs and saves them in a Git branch
+branding:
+  icon: archive
+  color: blue
 inputs:
   git-branch:
     description: The Git branch in this repository to store the JUnit reports in (string)
@@ -79,6 +82,3 @@ runs:
         message: 'Update JUnit reports'
         add: '*.xml'
         cwd: junit-reports
-branding:
-  icon: archive
-  color: blue
