@@ -90,4 +90,4 @@ runs:
         echo "test-suite=${TESTS}" >> $GITHUB_OUTPUT
 branding:
   icon: shuffle
-  color: yellow
+  color: blue

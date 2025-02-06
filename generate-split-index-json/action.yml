@@ -25,4 +25,4 @@ runs:
         echo "split-index-list=${INDEX_JSON}" >> "$GITHUB_OUTPUT"
 branding:
   icon: list
-  color: yellow
+  color: blue
