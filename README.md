@@ -33,11 +33,15 @@ jobs:
       matrix:
         split-index: ${{ fromjson(needs.generate-split-index-json.outputs.json) }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
+
       - name: Split tests
         id: split-tests
         uses: donnerbart/split-tests-java-action@v1
@@ -49,11 +53,10 @@ jobs:
           format: 'gradle'
           averageTime: true
           debug: true
+
       - name: Run integration tests
-        working-directory: helm-charts
-        env:
-          K8S_VERSION_TYPE: ${{ matrix.k8s-version-type }}
         run: ./gradlew :integrationTest ${{ steps.split-tests.outputs.test-suite }}        
+
       - name: Upload JUnit report artifact
         uses: actions/upload-artifact@v4
         with:
