@@ -35,6 +35,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          path: project
+
+      - name: Checkout JUnit reports
+        uses: actions/checkout@v4
+        with:
+          path: junit-reports
+          ref: junit-reports/${{ github.base_ref }}
+        continue-on-error: true
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -48,7 +57,7 @@ jobs:
         with:
           split-index: ${{ matrix.split-index }}
           split-total: ${{ env.split-total }}
-          glob: '**/src/integrationTest/**/*IT.java'
+          glob: '**/project/src/integrationTest/**/*IT.java'
           junit-glob: '**/junit-reports/*.xml'
           format: 'gradle'
           averageTime: true
