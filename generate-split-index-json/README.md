@@ -1,4 +1,4 @@
-# @donnerbart/split-tests-java/generate-split-index-json
+# @donnerbart/split-tests-java-action/generate-split-index-json
 
 Generates the list of split index for the test matrix.
 
@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: Generate split index list 
         id: generate
-        uses: donnerbart/split-tests-java/generate-split-index-json@v1
+        uses: donnerbart/split-tests-java-action/generate-split-index-json@v1
         with:
           split-total: 10
 

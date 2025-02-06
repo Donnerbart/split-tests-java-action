@@ -1,4 +1,4 @@
-# @donnerbart/split-tests-java
+# @donnerbart/split-tests-java-action
 
 Divides a test suite into groups with equal execution time, based on prior test timings.
 
@@ -19,7 +19,7 @@ jobs:
     steps:
       - name: Generate split index list 
         id: generate
-        uses: donnerbart/split-tests-java/generate-split-index-json@v1
+        uses: donnerbart/split-tests-java-action/generate-split-index-json@v1
         with:
           split-total: ${{ env.split-total }}
 
@@ -40,7 +40,7 @@ jobs:
           java-version: 21
       - name: Split tests
         id: split-tests
-        uses: donnerbart/split-tests-java@v1
+        uses: donnerbart/split-tests-java-action@v1
         with:
           split-index: ${{ matrix.split-index }}
           split-total: ${{ env.split-total }}
