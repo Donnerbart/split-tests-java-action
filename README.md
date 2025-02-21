@@ -71,7 +71,7 @@ jobs:
           glob: '**/project/src/integrationTest/**/*IT.java'
           junit-glob: '**/junit-reports/*.xml'
           format: 'gradle'
-          averageTime: true
+          new-test-time: 'average'
           debug: true
 
       - name: Run integration tests
