@@ -91,6 +91,9 @@ runs:
         fi
         if [ -n "${{ inputs.new-test-time }}" ]; then
           COMMAND="$COMMAND --new-test-time ${{ inputs.new-test-time }}"
+        elif [ -n "${{ inputs.average-time }}" ]; then
+          echo "Warning! Using deprecated option average-time. Please use new-test-time instead!"
+          COMMAND="$COMMAND --new-test-time average"
         fi
         if [ -n "${{ inputs.working-directory }}" ]; then
           COMMAND="$COMMAND --working-directory ${{ inputs.working-directory }}"
