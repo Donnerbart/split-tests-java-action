@@ -35,10 +35,21 @@ inputs:
       - gradle
     default: list
   average-time:
+    deprecationMessage: This option is deprecated and should no longer be used. Use new-test-time instead.
     description: Use the average test time from tests with JUnit reports for tests without JUnit reports (boolean)
     required: false
     type: boolean
     default: false
+  new-test-time:
+    description: Configures the calculation of the test time for tests without JUnit reports (choice)
+    required: false
+    type: choice
+    options:
+      - zero
+      - average
+      - min
+      - max
+    default: average
   working-directory:
     description: The working directory. Defaults to the current directory (string)
     type: string
@@ -78,8 +89,8 @@ runs:
         if [ -n "${{ inputs.format }}" ]; then
           COMMAND="$COMMAND --format ${{ inputs.format }}"
         fi
-        if [ -n "${{ inputs.average-time }}" ]; then
-          COMMAND="$COMMAND --average-time"
+        if [ -n "${{ inputs.new-test-time }}" ]; then
+          COMMAND="$COMMAND --new-test-time ${{ inputs.new-test-time }}"
         fi
         if [ -n "${{ inputs.working-directory }}" ]; then
           COMMAND="$COMMAND --working-directory ${{ inputs.working-directory }}"
