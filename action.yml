@@ -107,7 +107,7 @@ runs:
           COMMAND="$COMMAND --working-directory ${{ inputs.working-directory }}"
         fi
         if [ -n "${{ inputs.calculate-optimal-total-split }}" ]; then
-          COMMAND="$COMMAND --calculate-optimal-total-split ${{ inputs.calculate-optimal-total-split }}"
+          COMMAND="$COMMAND --calculate-optimal-total-split"
         fi
         if [ -n "${{ inputs.max-optimal-total-split-calculations }}" ]; then
           COMMAND="$COMMAND --max-optimal-total-split-calculations ${{ inputs.max-optimal-total-split-calculations }}"
