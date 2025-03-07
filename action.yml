@@ -54,6 +54,14 @@ inputs:
     description: The working directory. Defaults to the current directory (string)
     type: string
     required: false
+  calculate-optimal-total-split:
+    description: Calculates the optimal test split. Logs a warning if split-total does not match (boolean)
+    type: boolean
+    required: false
+  max-optimal-total-split-calculations:
+    description: The maximum number of calculate-optimal-total-split calculations (integer)
+    type: integer
+    required: false
   debug:
     description: Enables debug logging (boolean)
     required: false
@@ -97,6 +105,12 @@ runs:
         fi
         if [ -n "${{ inputs.working-directory }}" ]; then
           COMMAND="$COMMAND --working-directory ${{ inputs.working-directory }}"
+        fi
+        if [ -n "${{ inputs.calculate-optimal-total-split }}" ]; then
+          COMMAND="$COMMAND --calculate-optimal-total-split ${{ inputs.calculate-optimal-total-split }}"
+        fi
+        if [ -n "${{ inputs.max-optimal-total-split-calculations }}" ]; then
+          COMMAND="$COMMAND --max-optimal-total-split-calculations ${{ inputs.max-optimal-total-split-calculations }}"
         fi
         if [ -n "${{ inputs.debug }}" ]; then
           COMMAND="$COMMAND --debug"
