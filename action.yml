@@ -80,14 +80,24 @@ outputs:
 runs:
   using: composite
   steps:
+    - name: Set environment variables
+      shell: bash
+      run: |
+        : "${DOWNLOAD_JAR:=true}"
+        : "${JAR_PATH:=split-tests-java.jar}"
+        echo "DOWNLOAD_JAR=$DOWNLOAD_JAR" >> $GITHUB_ENV
+        echo "JAR_PATH=$JAR_PATH" >> $GITHUB_ENV
     - name: Install split-tests-java
       shell: bash
-      run: curl -L -o split-tests-java.jar "https://github.com/donnerbart/split-tests-java/releases/latest/download/split-tests-java.jar"
+      run: |
+        if [[ "$DOWNLOAD_JAR" == "true" ]]; then
+          curl -L -o "$JAR_PATH" "https://github.com/donnerbart/split-tests-java/releases/latest/download/split-tests-java.jar"
+        fi
     - name: Split tests
       id: split-tests-java
       shell: bash
       run: |
-        COMMAND="java -jar split-tests-java.jar --split-index ${{ inputs.split-index }} --split-total ${{ inputs.split-total }} --glob ${{ inputs.glob }}"
+        COMMAND="java -jar $JAR_PATH --split-index ${{ inputs.split-index }} --split-total ${{ inputs.split-total }} --glob ${{ inputs.glob }}"
         if [ -n "${{ inputs.exclude-glob }}" ]; then
           COMMAND="$COMMAND --exclude-glob ${{ inputs.exclude-glob }}"
         fi
