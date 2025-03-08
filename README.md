@@ -1,3 +1,6 @@
+[![Integration tests](https://github.com/Donnerbart/split-tests-java-action/actions/workflows/integration-test.yml/badge.svg)](https://github.com/Donnerbart/split-tests-java-action/actions/workflows/integration-test.yml)
+[![Release](https://github.com/Donnerbart/split-tests-java-action/actions/workflows/release.yml/badge.svg)](https://github.com/Donnerbart/split-tests-java-action/actions/workflows/release.yml)
+
 # @donnerbart/split-tests-java-action
 
 Divides a test suite into groups with equal execution time, based on prior test timings.
