@@ -91,7 +91,7 @@ runs:
       shell: bash
       run: |
         if [[ "$DOWNLOAD_JAR" == "true" ]]; then
-          curl -L -o "$JAR_PATH" "https://github.com/donnerbart/split-tests-java/releases/latest/download/split-tests-java.jar"
+          curl -s -L -o "$JAR_PATH" "https://github.com/donnerbart/split-tests-java/releases/latest/download/split-tests-java.jar"
         fi
     - name: Split tests
       id: split-tests-java
