@@ -31,14 +31,30 @@ runs:
   steps:
     - name: Set up xmlstarlet
       shell: bash
-      run: sudo apt update && sudo apt install -y xmlstarlet
+      run: |
+        sudo apt update
+        sudo apt install -y xmlstarlet
 
-    - name: Checkout JUnit reports
+    - name: Checkout repository
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
       with:
         path: junit-reports
-        ref: ${{ inputs.git-branch }}
-      continue-on-error: true
+
+    - name: Create orphaned branch if checkout failed
+      shell: bash
+      working-directory: junit-reports
+      run: |
+        if git show-ref --verify --quiet refs/remotes/origin/${{ inputs.git-branch }}; then
+          echo "Switching to branch ${{ inputs.git-branch }}"
+          git switch ${{ inputs.git-branch }}
+        else
+          echo "Creating branch ${{ inputs.git-branch }}"
+          git switch --orphan ${{ inputs.git-branch }}
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git commit --allow-empty -m "Initial commit for JUnit reports branch"
+          git push origin --set-upstream ${{ inputs.git-branch }}
+        fi
 
     - name: Merge JUnit report artifacts
       uses: actions/upload-artifact/merge@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4
