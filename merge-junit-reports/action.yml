@@ -45,11 +45,11 @@ runs:
       working-directory: junit-reports
       run: |
         if git ls-remote --exit-code --heads origin ${{ inputs.git-branch }}; then
-          echo "Switching to branch ${{ inputs.git-branch }}"
+          echo "Switching to existing branch ${{ inputs.git-branch }}"
           git fetch --quiet
           git switch ${{ inputs.git-branch }}
         else
-          echo "Creating branch ${{ inputs.git-branch }}"
+          echo "Creating new branch ${{ inputs.git-branch }}"
           git switch --orphan ${{ inputs.git-branch }}
           git config user.name "${{ github.actor }}"
           git config user.email "${{ github.actor }}@users.noreply.github.com"
