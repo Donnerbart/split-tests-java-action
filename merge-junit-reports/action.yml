@@ -46,6 +46,7 @@ runs:
       run: |
         if git ls-remote --exit-code --heads origin ${{ inputs.git-branch }}; then
           echo "Switching to branch ${{ inputs.git-branch }}"
+          git fetch --quiet
           git switch ${{ inputs.git-branch }}
         else
           echo "Creating branch ${{ inputs.git-branch }}"
