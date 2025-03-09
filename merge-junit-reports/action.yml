@@ -44,7 +44,7 @@ runs:
       shell: bash
       working-directory: junit-reports
       run: |
-        if git show-ref --verify --quiet refs/remotes/origin/${{ inputs.git-branch }}; then
+        if git ls-remote --exit-code --heads origin ${{ inputs.git-branch }}; then
           echo "Switching to branch ${{ inputs.git-branch }}"
           git switch ${{ inputs.git-branch }}
         else
