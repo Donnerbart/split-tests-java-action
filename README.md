@@ -78,7 +78,7 @@ jobs:
           debug: true
 
       - name: Run integration tests
-        run: ./gradlew :integrationTest ${{ steps.split-tests.outputs.test-suite }}        
+        run: ./gradlew :integrationTest ${{ steps.split-tests.outputs.test-suite }}
 
       - name: Upload JUnit report artifact
         uses: actions/upload-artifact@v4
