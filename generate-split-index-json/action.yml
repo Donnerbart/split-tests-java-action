@@ -8,6 +8,7 @@ inputs:
   split-total:
     description: Total number of instances executing the tests (integer)
     required: true
+    type: number
 outputs:
   split-total:
     description: Total number of instances executing the tests
