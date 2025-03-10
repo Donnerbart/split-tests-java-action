@@ -50,11 +50,10 @@ jobs:
           path: project
 
       - name: Checkout JUnit reports
-        uses: actions/checkout@v4
+        uses: donnerbart/split-tests-java-action/download-junit-reports@v1
         with:
+          git-branch: junit-reports/${{ github.base_ref }}
           path: junit-reports
-          ref: junit-reports/${{ github.base_ref }}
-        continue-on-error: true
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4

@@ -1,0 +1,88 @@
+name: Merge JUnit reports
+author: donnerbart@users.noreply.github.com
+description: Downloads the JUnit reports a Git branch
+branding:
+  icon: download
+  color: blue
+inputs:
+  git-branch:
+    description: The Git branch in this repository to download the JUnit reports from (string)
+    required: true
+    type: string
+  path:
+    description: Relative path under the GitHub workspace to download the JUnit reports (string)
+    required: false
+    type: string
+    default: ${{ github.workspace }}
+  artifact-name:
+    description: The artifact name for the SHA of the JUnit reports (string)
+    required: false
+    type: string
+    default: junit-xml-reports-sha
+  artifact-path:
+    description: Path to save the SHA of the JUnit reports in the GitHub workspace (string)
+    required: false
+    type: string
+    default: junit-xml-reports-sha
+runs:
+  using: composite
+  steps:
+    - name: Download JUnit reports SHA artifact
+      uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: ${{ inputs.artifact-path }}
+      continue-on-error: true
+
+    - name: Check JUnit reports SHA
+      id: junit-reports-sha
+      shell: bash
+      run: |
+        echo "Checking JUnit reports SHA"
+        UPLOAD_SHA_ARTIFACT=true
+        CHECKOUT_REF=${{ inputs.git-branch }}
+        if [ -d ${{ inputs.artifact-path }} ]; then
+          cd ${{ inputs.artifact-path }}
+          if [ -f junit-reports-sha.txt ]; then
+            UPLOAD_SHA_ARTIFACT=false
+            CHECKOUT_REF=$(cat junit-reports-sha.txt)
+          fi
+        else
+          mkdir ${{ inputs.artifact-path }} || true
+        fi
+        if [ "$UPLOAD_SHA_ARTIFACT" == "true" ]; then
+          echo "Checking out JUnit reports from branch $CHECKOUT_REF"
+        else
+          echo "Checking out JUnit reports from previously used SHA $CHECKOUT_REF"
+        fi
+        echo "upload-artifact=${UPLOAD_SHA_ARTIFACT}" >> "$GITHUB_OUTPUT"
+        echo "ref=${CHECKOUT_REF}" >> "$GITHUB_OUTPUT"
+
+    - name: Checkout repository
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      with:
+        path: ${{ inputs.path }}
+        ref: ${{ steps.junit-reports-sha.outputs.ref }}
+
+    - name: Save JUnit reports SHA
+      if: ${{ steps.junit-reports-sha.outputs.upload-artifact == 'true' }}
+      shell: bash
+      working-directory: ${{ inputs.path }}
+      run: |
+        SHA=$(git rev-parse HEAD)
+        echo "Saving JUnit reports SHA $SHA"
+        cd ../${{ inputs.artifact-path }}
+        echo -n "$SHA" > junit-reports-sha.txt
+
+    - name: Upload JUnit report SHA
+      if: ${{ steps.junit-reports-sha.outputs.upload-artifact == 'true' }}
+      uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: ${{ inputs.artifact-path }}
+
+    - name: Clean up JUnit reports SHA
+      if: always()
+      shell: bash
+      run: |
+        rm -rf ${{ inputs.artifact-path }} || true
