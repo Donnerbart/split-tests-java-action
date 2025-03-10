@@ -2,7 +2,7 @@ name: Integration tests
 
 on:
   push:
-    branches: ["**"]
+    branches: [ "**" ]
 
 concurrency:
   group: integration-test-${{ github.ref }}
@@ -12,9 +12,126 @@ env:
   split-total: 4
 
 jobs:
+  download-junit-reports-test:
+    name: Download JUnit reports
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout split-tests-java-action
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Create JUnit reports branch
+        run: |
+          BRANCH=junit-reports-it-${{ github.sha }}-download
+          echo "Creating branch $BRANCH"
+          git switch --orphan $BRANCH
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          touch first.xml
+          git add *.xml
+          git commit -m "Initial commit for JUnit reports branch"
+          SHA=$(git rev-parse HEAD)
+          git push origin --set-upstream $BRANCH
+          git switch ${{ github.ref_name }}
+          echo "Saving expexted JUnit reports SHA $SHA"
+          echo "expected-junit-reports-sha=${SHA}" >> "$GITHUB_ENV"
+
+      - name: Download JUnit reports
+        uses: ./download-junit-reports
+        with:
+          git-branch: junit-reports-it-${{ github.sha }}-download
+          path: junit-reports-first
+
+      - name: Assert JUnit reports
+        working-directory: junit-reports-first
+        run: |
+          REPORT_FILE="first.xml"
+          if [[ ! -f "$REPORT_FILE" ]]; then
+            echo "Error: JUnit report $REPORT_FILE not found!"
+            ls -l
+            exit 1
+          fi
+          FILE_COUNT=$(ls -1 | wc -l)
+          if [[ "$FILE_COUNT" -ne 1 ]]; then
+            echo "Error: Expected 1 JUnit reports, but found $FILE_COUNT files!"
+            ls -l
+            exit 1
+          fi
+
+      - name: Update JUnit reports
+        working-directory: junit-reports-first
+        run: |
+          touch second.xml
+          git add *.xml
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git commit -m "Second commit for JUnit reports branch"
+          git push
+
+      - name: Download JUnit reports
+        uses: ./download-junit-reports
+        with:
+          git-branch: junit-reports-it-${{ github.sha }}-download
+          path: junit-reports-second
+
+      - name: Assert JUnit reports
+        working-directory: junit-reports-second
+        run: |
+          REPORT_FILE="first.xml"
+          if [[ ! -f "$REPORT_FILE" ]]; then
+            echo "Error: JUnit report $REPORT_FILE not found!"
+            ls -l
+            exit 1
+          fi
+          FILE_COUNT=$(ls -1 | wc -l)
+          if [[ "$FILE_COUNT" -ne 1 ]]; then
+            echo "Error: Expected 1 JUnit reports, but found $FILE_COUNT files!"
+            ls -l
+            exit 1
+          fi
+
+      - name: Download JUnit reports SHA artifact
+        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4
+        with:
+          name: junit-xml-reports-sha
+          path: junit-xml-reports-sha-artifact-assertion
+
+      - name: Assert JUnit reports SHA artifact
+        working-directory: junit-xml-reports-sha-artifact-assertion
+        run: |
+          SHA_FILE="junit-reports-sha.txt"
+          if [[ ! -f "$SHA_FILE" ]]; then
+            echo "Error: JUnit reports SHA file $SHA_FILE not found!"
+            ls -l
+            exit 1
+          fi
+          FILE_COUNT=$(ls -1 | wc -l)
+          if [[ "$FILE_COUNT" -ne 1 ]]; then
+            echo "Error: Expected 1 JUnit reports SHA file, but found $FILE_COUNT files!"
+            ls -l
+            exit 1
+          fi
+          ARTIFACT_SHA=$(cat $SHA_FILE)
+          if [ "$ARTIFACT_SHA" != "${{ env.expected-junit-reports-sha }}" ]; then
+            echo "Error: JUnit reports SHA $ARTIFACT_SHA in artifact does not match expected SHA ${{ env.expected-junit-reports-sha }}"
+            exit 1
+          fi
+
+      - name: Clean up JUnit reports branch
+        if: always()
+        run: |
+          git push origin --delete junit-reports-it-${{ github.sha }}-download || true
+
+      - name: Clean up JUnit reports artifact
+        uses: geekyeggo/delete-artifact@f275313e70c08f6120db482d7a6b98377786765b #v5
+        with:
+          name: junit-xml-reports-sha
+          failOnError: false
+
   generate-split-index-json:
     name: Generate split indexes
     runs-on: ubuntu-latest
+    needs:
+      download-junit-reports-test
     outputs:
       json: ${{ steps.generate.outputs.split-index-json }}
     steps:
@@ -192,7 +309,7 @@ jobs:
             exit 1
           fi
 
-      - name: Cleanup JUnit reports branch
+      - name: Clean up JUnit reports branch
         if: always()
         run: |
           git push origin --delete junit-reports-it-${{ github.sha }}-existing || true
@@ -277,7 +394,7 @@ jobs:
             exit 1
           fi
 
-      - name: Cleanup JUnit reports branch
+      - name: Clean up JUnit reports branch
         if: always()
         run: |
           git push origin --delete junit-reports-it-${{ github.sha }}-new || true
