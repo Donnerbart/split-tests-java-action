@@ -87,12 +87,14 @@ runs:
         : "${JAR_PATH:=split-tests-java.jar}"
         echo "DOWNLOAD_JAR=$DOWNLOAD_JAR" >> $GITHUB_ENV
         echo "JAR_PATH=$JAR_PATH" >> $GITHUB_ENV
+
     - name: Install split-tests-java
       shell: bash
       run: |
         if [[ "$DOWNLOAD_JAR" == "true" ]]; then
           curl -s -L -o "$JAR_PATH" "https://github.com/donnerbart/split-tests-java/releases/latest/download/split-tests-java.jar"
         fi
+
     - name: Split tests
       id: split-tests-java
       shell: bash
