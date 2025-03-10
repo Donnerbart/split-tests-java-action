@@ -8,23 +8,29 @@ inputs:
   git-branch:
     description: The Git branch in this repository to store the JUnit reports in (string)
     required: true
+    type: string
   artifact-name:
-    description: The artifact name for the merged JUnit reports of all test split jobs
+    description: The artifact name for the merged JUnit reports of all test split jobs (string)
     required: true
+    type: string
   split-artifact-pattern:
     description: The artifact name pattern used by the test split jobs, e.g. junit-xml-reports-* (string)
     required: true
+    type: string
   split-artifact-delete-merged:
     description: Configures if the artifacts of the test split jobs should be deleted after the merge (boolean)
     required: false
+    type: boolean
     default: true
   cleanup-junit-reports:
     description: Configures if the test output should be removed from the merged JUnit reports (boolean)
     required: false
+    type: boolean
     default: true
   delete-old-junit-reports:
     description: Configures if the old JUnit reports in the Git branch should be deleted (boolean)
     required: false
+    type: boolean
     default: true
 runs:
   using: composite
