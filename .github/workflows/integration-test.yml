@@ -42,7 +42,7 @@ jobs:
           git-branch: junit-reports-it-${{ github.sha }}-download
           path: junit-reports-first-index-1
 
-      - name: Checkout JUnit reports (split-index 0)
+      - name: Checkout JUnit reports (split-index 0a)
         uses: ./checkout-junit-reports
         with:
           split-index: 0
@@ -56,9 +56,16 @@ jobs:
           git-branch: junit-reports-it-${{ github.sha }}-download
           path: junit-reports-first-index-2
 
+      - name: Checkout JUnit reports (split-index 0b)
+        uses: ./checkout-junit-reports
+        with:
+          split-index: 0
+          git-branch: junit-reports-it-${{ github.sha }}-download
+          path: junit-reports-first-index-3
+
       - name: Assert JUnit reports
         run: |
-          for SPLIT_INDEX in {0..2}; do
+          for SPLIT_INDEX in {0..3}; do
             echo "Checking JUnit reports for split-index $SPLIT_INDEX"
             cd junit-reports-first-index-$SPLIT_INDEX
             REPORT_FILE="first.xml"
