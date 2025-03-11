@@ -18,6 +18,11 @@ inputs:
     required: false
     type: string
     default: ${{ github.workspace }}
+  upload-artifact:
+    description: Configures if the artifact should be uploaded. Useful if you have an additional matrix dimension, so limiting to split-index 0 is not enough to prevent concurrency issues (boolean)
+    required: false
+    type: boolean
+    default: true
   artifact-name:
     description: The artifact name for the SHA of the JUnit reports (string)
     required: false
@@ -43,7 +48,7 @@ runs:
       shell: bash
       run: |
         echo "Checking JUnit reports SHA"
-        UPLOAD_SHA_ARTIFACT=true
+        UPLOAD_SHA_ARTIFACT=${{ inputs.upload-artifact }}
         CHECKOUT_REF=${{ inputs.git-branch }}
         if [ -d ${{ inputs.artifact-path }} ]; then
           cd ${{ inputs.artifact-path }}

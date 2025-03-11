@@ -63,6 +63,14 @@ jobs:
           git-branch: junit-reports-it-${{ github.sha }}-download
           path: junit-reports-first-index-3
 
+      - name: Checkout JUnit reports (split-index 0c)
+        uses: ./checkout-junit-reports
+        with:
+          split-index: 0
+          git-branch: junit-reports-it-${{ github.sha }}-download
+          path: junit-reports-first-index-4
+          upload-artifact: false
+
       - name: Assert JUnit reports
         run: |
           for SPLIT_INDEX in {0..3}; do
