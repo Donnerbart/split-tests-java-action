@@ -50,7 +50,7 @@ jobs:
           path: project
 
       - name: Checkout JUnit reports
-        uses: donnerbart/split-tests-java-action/download-junit-reports@v1
+        uses: donnerbart/split-tests-java-action/checkout-junit-reports@v1
         with:
           git-branch: junit-reports/${{ github.base_ref }}
           path: junit-reports
