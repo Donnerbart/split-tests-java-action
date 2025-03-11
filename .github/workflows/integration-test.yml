@@ -35,41 +35,61 @@ jobs:
           echo "Saving expexted JUnit reports SHA $SHA"
           echo "expected-junit-reports-sha=${SHA}" >> "$GITHUB_ENV"
 
-      - name: Download JUnit reports
+      - name: Checkout JUnit reports (split-index 1)
         uses: ./checkout-junit-reports
         with:
+          split-index: 1
           git-branch: junit-reports-it-${{ github.sha }}-download
-          path: junit-reports-first
+          path: junit-reports-first-index-1
+
+      - name: Checkout JUnit reports (split-index 0)
+        uses: ./checkout-junit-reports
+        with:
+          split-index: 0
+          git-branch: junit-reports-it-${{ github.sha }}-download
+          path: junit-reports-first-index-0
+
+      - name: Checkout JUnit reports (split-index 2)
+        uses: ./checkout-junit-reports
+        with:
+          split-index: 2
+          git-branch: junit-reports-it-${{ github.sha }}-download
+          path: junit-reports-first-index-2
 
       - name: Assert JUnit reports
-        working-directory: junit-reports-first
         run: |
-          REPORT_FILE="first.xml"
-          if [[ ! -f "$REPORT_FILE" ]]; then
-            echo "Error: JUnit report $REPORT_FILE not found!"
-            ls -l
-            exit 1
-          fi
-          FILE_COUNT=$(ls -1 | wc -l)
-          if [[ "$FILE_COUNT" -ne 1 ]]; then
-            echo "Error: Expected 1 JUnit reports, but found $FILE_COUNT files!"
-            ls -l
-            exit 1
-          fi
+          for SPLIT_INDEX in {0..2}; do
+            echo "Checking JUnit reports for split-index $SPLIT_INDEX"
+            cd junit-reports-first-index-$SPLIT_INDEX
+            REPORT_FILE="first.xml"
+            if [[ ! -f "$REPORT_FILE" ]]; then
+              echo "Error: JUnit report $REPORT_FILE not found!"
+              ls -l
+              exit 1
+            fi
+            FILE_COUNT=$(ls -1 | wc -l)
+            if [[ "$FILE_COUNT" -ne 1 ]]; then
+              echo "Error: Expected 1 JUnit reports, but found $FILE_COUNT files!"
+              ls -l
+              exit 1
+            fi
+            cd ..
+          done
 
       - name: Update JUnit reports
-        working-directory: junit-reports-first
+        working-directory: junit-reports-first-index-0
         run: |
           touch second.xml
           git add *.xml
           git config user.name "${{ github.actor }}"
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           git commit -m "Second commit for JUnit reports branch"
-          git push
+          git push origin HEAD:junit-reports-it-${{ github.sha }}-download
 
       - name: Download JUnit reports
         uses: ./checkout-junit-reports
         with:
+          split-index: 0
           git-branch: junit-reports-it-${{ github.sha }}-download
           path: junit-reports-second
 
