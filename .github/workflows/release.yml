@@ -19,6 +19,6 @@ jobs:
         uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2
 
       - name: Update major tag
-        uses: actions/publish-action@f784495ce78a41bac4ed7e34a73f0034015764bb # v0.3.0
+        uses: cssnr/update-version-tags-action@87f610784ee7359050fd8fad52e169927584f110 # v1
         with:
-          source-tag: ${{ github.ref_name }}
+          minor: false
