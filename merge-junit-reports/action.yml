@@ -99,6 +99,18 @@ runs:
       shell: bash
       run: cp junit-reports-artifact/*.xml junit-reports/
 
+    - name: Report failed tests
+      shell: bash
+      working-directory: junit-reports
+      run: |
+        find . -name "*.xml" | while read -r REPORT; do
+          FILE="$(basename "$REPORT")"
+          xmlstarlet sel -t \
+          -m "//testsuite[@failures > 0 or @errors > 0]" \
+          -v "concat('::error file=', '$FILE', ',line=1,title=', @name, '::Test failed: ', @failures, ' failure(s), ', @errors, ' error(s)')" -n \
+          "$REPORT" || true
+        done
+
     - name: Update JUnit reports
       uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5 # v9
       with:
