@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout split-tests-java-action
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
 
       - name: Create JUnit reports branch
         run: |
@@ -171,7 +171,7 @@ jobs:
       json: ${{ steps.generate.outputs.split-index-json }}
     steps:
       - name: Checkout split-tests-java-action
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
 
       - name: Generate split index list
         id: generate
@@ -196,10 +196,10 @@ jobs:
       JAR_PATH: split-tests-java/build/libs/split-tests-java.jar
     steps:
       - name: Checkout split-tests-java-action
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
 
       - name: Checkout split-tests-java
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
         with:
           repository: Donnerbart/split-tests-java
           path: split-tests-java
@@ -292,7 +292,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout split-tests-java-action
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
 
       - name: Create JUnit reports branch
         run: |
@@ -314,7 +314,7 @@ jobs:
           split-artifact-delete-merged: false
 
       - name: Checkout JUnit reports
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
         with:
           path: junit-reports-assertion
           ref: junit-reports-it-${{ github.sha }}-existing
@@ -358,7 +358,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout split-tests-java-action
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
 
       - name: Merge JUnit reports
         uses: ./merge-junit-reports
@@ -368,7 +368,7 @@ jobs:
           split-artifact-pattern: junit-xml-reports-*
 
       - name: Checkout JUnit reports
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
         with:
           path: junit-reports-assertion
           ref: junit-reports-it-${{ github.sha }}-new
