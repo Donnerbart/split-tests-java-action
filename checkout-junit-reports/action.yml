@@ -49,40 +49,54 @@ runs:
         name: ${{ inputs.artifact-name }}
         path: ${{ inputs.artifact-path }}
 
+    - name: Checkout repository
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+      with:
+        path: ${{ inputs.path }}
+
     - name: Check JUnit reports SHA
       id: junit-reports-sha
       shell: bash
+      working-directory: ${{ inputs.path }}
       run: |
         echo "Checking JUnit reports SHA"
         UPLOAD_SHA_ARTIFACT=${{ inputs.upload-artifact }}
         CHECKOUT_REF=${{ inputs.git-branch }}
-        if [ -d ${{ inputs.artifact-path }} ]; then
-          cd ${{ inputs.artifact-path }}
-          if [ -f junit-reports-sha.txt ]; then
+        if [ -f "../${{ inputs.artifact-path }}/junit-reports-sha.txt" ]; then
+          SAVED_SHA=$(cat "../${{ inputs.artifact-path }}/junit-reports-sha.txt")
+          echo "Checking out saved SHA '$SAVED_SHA' for repeatable test distribution"
+          git fetch --quiet
+          if git rev-parse --verify "$SAVED_SHA^{commit}" >/dev/null 2>&1; then
+            git checkout --quiet "$SAVED_SHA"
             UPLOAD_SHA_ARTIFACT=false
-            CHECKOUT_REF=$(cat junit-reports-sha.txt)
+          else
+            echo "Error: Saved SHA '$SAVED_SHA' is not a valid commit. Aborting checkout." >&2
+            exit 1
           fi
         else
-          mkdir ${{ inputs.artifact-path }} || true
-        fi
-        if [ "$UPLOAD_SHA_ARTIFACT" == "true" ]; then
-          echo "Checking out JUnit reports from branch $CHECKOUT_REF"
-        else
-          echo "Checking out JUnit reports from previously used SHA $CHECKOUT_REF"
+          # no SHA artifact exists, handle branch checkout and potentially create new SHA artifact
+          if git ls-remote --exit-code --heads origin "$CHECKOUT_REF"; then
+            echo "Switching to existing branch: $CHECKOUT_REF"
+            git fetch --quiet
+            git switch "$CHECKOUT_REF"
+          else
+            echo "Branch $CHECKOUT_REF does not exist, no JUnit test reports available"
+            cd ..
+            rm -rf "${{ inputs.path }}"
+            mkdir -p "${{ inputs.path }}"
+            UPLOAD_SHA_ARTIFACT=false
+          fi
         fi
         # we can only upload the artifact once, so only do this on the first split
         if [ "${{ inputs.split-index }}" != "0" ]; then
           echo "Skipping upload of JUnit reports SHA on this index"
           UPLOAD_SHA_ARTIFACT=false
+        elif [ "$UPLOAD_SHA_ARTIFACT" == "true" ]; then
+          echo "Will upload JUnit reports SHA for branch $CHECKOUT_REF"
+        else
+          echo "Will not upload JUnit reports SHA"
         fi
         echo "upload-artifact=${UPLOAD_SHA_ARTIFACT}" >> "$GITHUB_OUTPUT"
-        echo "ref=${CHECKOUT_REF}" >> "$GITHUB_OUTPUT"
-
-    - name: Checkout repository
-      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
-      with:
-        path: ${{ inputs.path }}
-        ref: ${{ steps.junit-reports-sha.outputs.ref }}
 
     - name: Save JUnit reports SHA
       if: ${{ steps.junit-reports-sha.outputs.upload-artifact == 'true' }}
@@ -91,7 +105,8 @@ runs:
       run: |
         SHA=$(git rev-parse HEAD)
         echo "Saving JUnit reports SHA $SHA"
-        cd ../${{ inputs.artifact-path }}
+        mkdir -p "../${{ inputs.artifact-path }}"
+        cd "../${{ inputs.artifact-path }}"
         echo -n "$SHA" > junit-reports-sha.txt
 
     - name: Upload JUnit report SHA
