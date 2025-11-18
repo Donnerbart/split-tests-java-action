@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout split-tests-java-action
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
       - name: Create JUnit reports branch
         run: |
@@ -174,7 +174,7 @@ jobs:
       - checkout-junit-reports
     steps:
       - name: Checkout split-tests-java-action
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
       - name: Checkout JUnit reports (split-index 1)
         uses: ./checkout-junit-reports
@@ -240,7 +240,7 @@ jobs:
       json: ${{ steps.generate.outputs.split-index-json }}
     steps:
       - name: Checkout split-tests-java-action
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
       - name: Generate split index list
         id: generate
@@ -265,10 +265,10 @@ jobs:
       JAR_PATH: split-tests-java/build/libs/split-tests-java.jar
     steps:
       - name: Checkout split-tests-java-action
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
       - name: Checkout split-tests-java
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           repository: Donnerbart/split-tests-java
           path: split-tests-java
@@ -361,7 +361,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout split-tests-java-action
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
       - name: Create JUnit reports branch
         run: |
@@ -383,7 +383,7 @@ jobs:
           split-artifact-delete-merged: false
 
       - name: Checkout JUnit reports
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           path: junit-reports-assertion
           ref: junit-reports-it-${{ github.sha }}-existing
@@ -427,7 +427,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout split-tests-java-action
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
       - name: Merge JUnit reports
         uses: ./merge-junit-reports
@@ -437,7 +437,7 @@ jobs:
           split-artifact-pattern: junit-xml-reports-*
 
       - name: Checkout JUnit reports
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           path: junit-reports-assertion
           ref: junit-reports-it-${{ github.sha }}-new
