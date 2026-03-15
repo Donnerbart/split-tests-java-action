@@ -162,7 +162,7 @@ jobs:
           git push origin --delete junit-reports-it-${{ github.sha }}-download || true
 
       - name: Clean up JUnit reports artifact
-        uses: geekyeggo/delete-artifact@f275313e70c08f6120db482d7a6b98377786765b #v5
+        uses: geekyeggo/delete-artifact@176a747ab7e287e3ff4787bf8a148716375ca118 # v6
         with:
           name: junit-xml-reports-sha
           failOnError: false
