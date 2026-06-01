@@ -38,9 +38,18 @@ runs:
   steps:
     - name: Check if JUnit reports SHA artifact exists
       id: junit-reports-sha-check
-      uses: lit-Protocol/artifact-exists-action@ff41b0e92208918c585721cbf3e866dfddaf7879 # v0
-      with:
-        name: ${{ inputs.artifact-name }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        ARTIFACT_NAME: ${{ inputs.artifact-name }}
+      run: |
+        if gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts" \
+            --jq ".artifacts[] | select(.name == \"$ARTIFACT_NAME\") | .name" \
+            | grep -q .; then
+          echo "exists=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "exists=false" >> "$GITHUB_OUTPUT"
+        fi
 
     - name: Download JUnit reports SHA artifact
       if: ${{ steps.junit-reports-sha-check.outputs.exists == 'true' }}
