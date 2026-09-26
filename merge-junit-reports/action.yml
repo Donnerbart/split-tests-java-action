@@ -89,19 +89,30 @@ runs:
         echo -n "JUnit report size after cleanup: "
         du -sch *.xml | tail -n 1 | cut -f1
 
-    - name: Delete old JUnit reports
-      if: ${{ inputs.delete-old-junit-reports }}
-      working-directory: junit-reports
-      shell: bash
-      run: git rm *.xml || true
-
-    - name: Copy new JUnit reports
-      shell: bash
-      run: cp junit-reports-artifact/*.xml junit-reports/
-
     - name: Update JUnit reports
-      uses: EndBug/add-and-commit@cc9c08ba6c8df3b93a8f2db63e89b98368ae2ae8 # v11
-      with:
-        message: 'Update JUnit reports'
-        add: '*.xml'
-        cwd: junit-reports
+      shell: bash
+      working-directory: junit-reports
+      run: |
+        git config user.name "${{ github.actor }}"
+        git config user.email "${{ github.actor }}@users.noreply.github.com"
+        for ATTEMPT in {1..5}; do
+          git fetch --quiet origin ${{ inputs.git-branch }}
+          git reset --quiet --hard FETCH_HEAD
+          if [[ "${{ inputs.delete-old-junit-reports }}" == "true" ]]; then
+            git rm --quiet *.xml || true
+          fi
+          cp ../junit-reports-artifact/*.xml .
+          git add *.xml
+          if git diff --cached --quiet; then
+            echo "JUnit reports are unchanged"
+            exit 0
+          fi
+          git commit --quiet -m "Update JUnit reports"
+          if git push origin HEAD:${{ inputs.git-branch }}; then
+            exit 0
+          fi
+          echo "Push of JUnit reports failed (attempt $ATTEMPT), retrying with the latest ${{ inputs.git-branch }}"
+          sleep $((ATTEMPT * 5))
+        done
+        echo "::error::Could not push JUnit reports to ${{ inputs.git-branch }}"
+        exit 1
