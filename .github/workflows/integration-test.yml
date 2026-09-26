@@ -418,11 +418,126 @@ jobs:
         run: |
           git push origin --delete junit-reports-it-${{ github.sha }}-existing || true
 
+  merge-junit-reports-with-concurrent-push:
+    name: Merge JUnit reports with concurrent push
+    runs-on: ubuntu-latest
+    needs:
+      - integration-test
+    permissions:
+      contents: write
+    env:
+      BRANCH: junit-reports-it-${{ github.sha }}-concurrent
+    steps:
+      - name: Checkout split-tests-java-action
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Create JUnit reports branch
+        run: |
+          echo "Creating branch $BRANCH"
+          git switch --orphan $BRANCH
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git commit --allow-empty -m "Initial commit for JUnit reports branch"
+          git push origin --set-upstream $BRANCH
+          git switch ${{ github.ref_name }}
+
+      - name: Checkout JUnit reports for concurrent push
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          path: junit-reports-concurrent
+          ref: ${{ env.BRANCH }}
+
+      - name: Prepare concurrent commit
+        working-directory: junit-reports-concurrent
+        run: |
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          echo '<testsuite name="de.donnerbart.example.ConcurrentTest"/>' > TEST-de.donnerbart.example.ConcurrentTest.xml
+          git add TEST-de.donnerbart.example.ConcurrentTest.xml
+          git commit -m "Concurrent JUnit reports update"
+          echo "concurrent-sha=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Install pre-push hook that pushes the concurrent commit first
+        run: |
+          HOOKS_DIR="$RUNNER_TEMP/git-hooks"
+          mkdir -p "$HOOKS_DIR"
+          cat > "$HOOKS_DIR/pre-push" <<'HOOK'
+          #!/usr/bin/env bash
+          MARKER="$RUNNER_TEMP/concurrent-push-done"
+          if [[ -f "$MARKER" ]]; then
+            exit 0
+          fi
+          touch "$MARKER"
+          env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE \
+            git -C "$GITHUB_WORKSPACE/junit-reports-concurrent" push --quiet origin HEAD:$BRANCH
+          HOOK
+          chmod +x "$HOOKS_DIR/pre-push"
+          git config --global core.hooksPath "$HOOKS_DIR"
+
+      - name: Merge JUnit reports
+        uses: ./merge-junit-reports
+        with:
+          git-branch: ${{ env.BRANCH }}
+          artifact-name: junit-xml-report-concurrent
+          split-artifact-pattern: junit-xml-reports-*
+          split-artifact-delete-merged: false
+
+      - name: Remove pre-push hook
+        if: always()
+        run: git config --global --unset core.hooksPath || true
+
+      - name: Checkout JUnit reports
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          path: junit-reports-assertion
+          ref: ${{ env.BRANCH }}
+          fetch-depth: 0
+
+      - name: Assert JUnit reports
+        working-directory: junit-reports-assertion
+        run: |
+          if [[ ! -f "$RUNNER_TEMP/concurrent-push-done" ]]; then
+            echo "Error: The pre-push hook did not push the concurrent commit!"
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor ${{ env.concurrent-sha }} HEAD; then
+            echo "Error: The concurrent commit ${{ env.concurrent-sha }} is not part of $BRANCH!"
+            git log --oneline
+            exit 1
+          fi
+          for SPLIT_INDEX in {0..3}; do
+            REPORT_FILE="TEST-de.donnerbart.example.ActionSplit${SPLIT_INDEX}Test.xml"
+            SEARCH_STRING='name="de.donnerbart.example.ActionSplit'${SPLIT_INDEX}'Test"'
+            if [[ ! -f "$REPORT_FILE" ]]; then
+              echo "Error: JUnit report $REPORT_FILE not found!"
+              ls -l
+              exit 1
+            fi
+            if ! grep -q "$SEARCH_STRING" "$REPORT_FILE"; then
+              echo "Error: JUnit report $REPORT_FILE does not contain the required string '$SEARCH_STRING'!"
+              cat $REPORT_FILE
+              exit 1
+            fi
+            echo "JUnit report $REPORT_FILE is valid"
+          done
+          FILE_COUNT=$(ls -1 | wc -l)
+          if [[ "$FILE_COUNT" -ne 4 ]]; then
+            echo "Error: Expected 4 JUnit reports, but found $FILE_COUNT files!"
+            ls -l
+            exit 1
+          fi
+
+      - name: Clean up JUnit reports branch
+        if: always()
+        run: |
+          git push origin --delete $BRANCH || true
+
   merge-junit-reports-with-new-branch:
     name: Merge JUnit reports with new branch
     runs-on: ubuntu-latest
     needs:
       - merge-junit-reports-with-existing-branch
+      - merge-junit-reports-with-concurrent-push
     permissions:
       contents: write
     steps:
