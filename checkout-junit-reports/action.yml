@@ -27,7 +27,7 @@ inputs:
     description: The artifact name for the SHA of the JUnit reports (string)
     required: false
     type: string
-    default: junit-xml-reports-sha
+    default: junit-reports-sha
   artifact-path:
     description: Path to save the SHA of the JUnit reports in the GitHub workspace (string)
     required: false
@@ -43,7 +43,8 @@ runs:
         GH_TOKEN: ${{ github.token }}
         ARTIFACT_NAME: ${{ inputs.artifact-name }}
       run: |
-        if gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts" \
+        if gh api -X GET "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts" \
+            -f name="$ARTIFACT_NAME" \
             --jq ".artifacts[] | select(.name == \"$ARTIFACT_NAME\") | .name" \
             | grep -q .; then
           echo "exists=true" >> "$GITHUB_OUTPUT"

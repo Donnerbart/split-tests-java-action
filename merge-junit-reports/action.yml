@@ -35,6 +35,14 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Check artifact configuration
+      shell: bash
+      run: |
+        if [[ "${{ inputs.artifact-name }}" == ${{ inputs.split-artifact-pattern }} ]]; then
+          echo "::error::The artifact-name '${{ inputs.artifact-name }}' must not match the split-artifact-pattern '${{ inputs.split-artifact-pattern }}'"
+          exit 1
+        fi
+
     - name: Set up xmlstarlet
       shell: bash
       run: |
@@ -69,12 +77,31 @@ runs:
         name: ${{ inputs.artifact-name }}
         pattern: ${{ inputs.split-artifact-pattern }}
         delete-merged: ${{ inputs.split-artifact-delete-merged }}
+        separate-directories: true
 
     - name: Download JUnit reports artifact
       uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
       with:
         name: ${{ inputs.artifact-name }}
-        path: junit-reports-artifact
+        path: junit-reports-download
+
+    - name: Collect JUnit reports
+      shell: bash
+      run: |
+        shopt -s nullglob
+        mkdir -p junit-reports-artifact
+        touch junit-reports-skipped.txt
+        for REPORT in junit-reports-download/*/*.xml; do
+          FILE=$(basename "$REPORT")
+          if [[ -f "junit-reports-artifact/$FILE" ]]; then
+            echo "::warning::Skipping duplicate JUnit report $REPORT"
+          elif ! xmlstarlet val --well-formed --err "$REPORT"; then
+            echo "::warning::Skipping malformed JUnit report $REPORT"
+            echo "$FILE" >> junit-reports-skipped.txt
+          else
+            cp "$REPORT" junit-reports-artifact/
+          fi
+        done
 
     - name: Clean up JUnit reports
       if: ${{ inputs.cleanup-junit-reports }}
@@ -84,7 +111,8 @@ runs:
         echo -n "JUnit report size before cleanup: "
         du -sch *.xml | tail -n 1 | cut -f1
         for REPORT in *.xml; do
-          xmlstarlet ed -d '//system-out' -d '//system-err' "$REPORT" > tmp-report.xml && mv tmp-report.xml "$REPORT"
+          xmlstarlet ed -d '//system-out' -d '//system-err' "$REPORT" > tmp-report.xml
+          mv tmp-report.xml "$REPORT"
         done
         echo -n "JUnit report size after cleanup: "
         du -sch *.xml | tail -n 1 | cut -f1
@@ -102,6 +130,15 @@ runs:
             git rm --quiet *.xml || true
           fi
           cp ../junit-reports-artifact/*.xml .
+          while read -r FILE; do
+            if [[ ! -f "../junit-reports-artifact/$FILE" ]] && git checkout --quiet FETCH_HEAD -- "$FILE" 2>/dev/null; then
+              if xmlstarlet val --well-formed --quiet "$FILE"; then
+                echo "Keeping previous version of JUnit report $FILE"
+              else
+                git rm --quiet --force "$FILE"
+              fi
+            fi
+          done < ../junit-reports-skipped.txt
           git add *.xml
           if git diff --cached --quiet; then
             echo "JUnit reports are unchanged"
