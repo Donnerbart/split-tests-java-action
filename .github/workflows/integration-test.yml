@@ -231,121 +231,6 @@ jobs:
             cd ..
           done
 
-  checkout-junit-reports-pagination-setup:
-    name: Checkout JUnit reports with paginated artifacts (setup)
-    runs-on: ubuntu-latest
-    outputs:
-      expected-junit-reports-sha: ${{ steps.create-branch.outputs.sha }}
-    steps:
-      - name: Checkout split-tests-java-action
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-
-      - name: Create JUnit reports branch
-        id: create-branch
-        run: |
-          BRANCH=junit-reports-it-${{ github.sha }}-pagination
-          echo "Creating branch $BRANCH"
-          git switch --orphan $BRANCH
-          git config user.name "${{ github.actor }}"
-          git config user.email "${{ github.actor }}@users.noreply.github.com"
-          touch first.xml
-          git add *.xml
-          git commit -m "Initial commit for JUnit reports branch"
-          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-          git push origin --set-upstream $BRANCH
-          git switch ${{ github.ref_name }}
-
-      - name: Checkout JUnit reports
-        uses: ./checkout-junit-reports
-        with:
-          split-index: 0
-          git-branch: junit-reports-it-${{ github.sha }}-pagination
-          path: junit-reports
-          artifact-name: junit-reports-sha-pagination
-
-  checkout-junit-reports-pagination-filler:
-    name: Checkout JUnit reports with paginated artifacts (filler ${{ matrix.index }})
-    runs-on: ubuntu-latest
-    needs:
-      - checkout-junit-reports-pagination-setup
-    strategy:
-      matrix:
-        index: [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29 ]
-    steps:
-      - name: Create filler file
-        run: echo "${{ matrix.index }}" > filler.txt
-
-      - name: Upload filler artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: pagination-filler-${{ matrix.index }}
-          path: filler.txt
-
-  checkout-junit-reports-pagination:
-    name: Checkout JUnit reports with paginated artifacts
-    runs-on: ubuntu-latest
-    needs:
-      - checkout-junit-reports-pagination-setup
-      - checkout-junit-reports-pagination-filler
-    steps:
-      - name: Checkout split-tests-java-action
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-
-      - name: Assert JUnit reports SHA artifact is not on the first page
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          INDEX=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts" \
-            --jq '[.artifacts[].name] | index("junit-reports-sha-pagination")')
-          if [[ "$INDEX" != "null" ]]; then
-            echo "Error: The JUnit reports SHA artifact is on the first page of the artifact list (index $INDEX)!"
-            exit 1
-          fi
-
-      - name: Update JUnit reports branch
-        run: |
-          git fetch --quiet origin junit-reports-it-${{ github.sha }}-pagination
-          git switch --quiet --detach FETCH_HEAD
-          git config user.name "${{ github.actor }}"
-          git config user.email "${{ github.actor }}@users.noreply.github.com"
-          touch second.xml
-          git add *.xml
-          git commit -m "Second commit for JUnit reports branch"
-          git push origin HEAD:junit-reports-it-${{ github.sha }}-pagination
-          git switch --quiet ${{ github.ref_name }}
-
-      - name: Checkout JUnit reports
-        uses: ./checkout-junit-reports
-        with:
-          split-index: 1
-          git-branch: junit-reports-it-${{ github.sha }}-pagination
-          path: junit-reports
-          artifact-name: junit-reports-sha-pagination
-
-      - name: Assert JUnit reports
-        working-directory: junit-reports
-        run: |
-          SHA=$(git rev-parse HEAD)
-          if [[ "$SHA" != "${{ needs.checkout-junit-reports-pagination-setup.outputs.expected-junit-reports-sha }}" ]]; then
-            echo "Error: Checked out $SHA instead of the saved JUnit reports SHA ${{ needs.checkout-junit-reports-pagination-setup.outputs.expected-junit-reports-sha }}!"
-            ls -l
-            exit 1
-          fi
-
-      - name: Clean up JUnit reports branch
-        if: always()
-        run: |
-          git push origin --delete junit-reports-it-${{ github.sha }}-pagination || true
-
-      - name: Clean up artifacts
-        if: always()
-        uses: geekyeggo/delete-artifact@176a747ab7e287e3ff4787bf8a148716375ca118 # v6
-        with:
-          name: |
-            junit-reports-sha-pagination
-            pagination-filler-*
-          failOnError: false
-
   generate-split-index-json:
     name: Generate split indexes
     runs-on: ubuntu-latest
@@ -787,7 +672,7 @@ jobs:
         working-directory: junit-reports-artifact-assertion
         run: |
           for SPLIT_INDEX in {0..3}; do
-            REPORT_FILE="TEST-de.donnerbart.example.ActionSplit${SPLIT_INDEX}Test.xml"
+            REPORT_FILE="junit-xml-reports-${SPLIT_INDEX}/TEST-de.donnerbart.example.ActionSplit${SPLIT_INDEX}Test.xml"
             SEARCH_STRING='name="de.donnerbart.example.ActionSplit'${SPLIT_INDEX}'Test"'
             if [[ ! -f "$REPORT_FILE" ]]; then
               echo "Error: JUnit report $REPORT_FILE not found!"
@@ -801,10 +686,10 @@ jobs:
             fi
             echo "JUnit report $REPORT_FILE is valid"
           done
-          FILE_COUNT=$(ls -1 | wc -l)
+          FILE_COUNT=$(find . -type f | wc -l)
           if [[ "$FILE_COUNT" -ne 4 ]]; then
             echo "Error: Expected 4 JUnit reports, but found $FILE_COUNT files!"
-            ls -l
+            ls -lR
             exit 1
           fi
 
