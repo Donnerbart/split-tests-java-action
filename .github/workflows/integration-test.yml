@@ -612,6 +612,55 @@ jobs:
         run: |
           git push origin --delete $BRANCH || true
 
+  merge-junit-reports-with-single-artifact:
+    name: Merge JUnit reports with single artifact
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      BRANCH: junit-reports-it-${{ github.sha }}-single
+    steps:
+      - name: Checkout split-tests-java-action
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Create JUnit report
+        run: |
+          mkdir -p split-0
+          echo '<testsuite name="de.donnerbart.example.SingleTest" time="1.0"/>' > split-0/TEST-de.donnerbart.example.SingleTest.xml
+
+      - name: Upload JUnit report artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: junit-xml-single-0
+          path: split-0/*.xml
+
+      - name: Merge JUnit reports
+        uses: ./merge-junit-reports
+        with:
+          git-branch: ${{ env.BRANCH }}
+          artifact-name: junit-xml-report-single
+          split-artifact-pattern: junit-xml-single-*
+
+      - name: Checkout JUnit reports
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          path: junit-reports-assertion
+          ref: ${{ env.BRANCH }}
+
+      - name: Assert JUnit reports
+        working-directory: junit-reports-assertion
+        run: |
+          if ! grep -q 'name="de.donnerbart.example.SingleTest"' TEST-de.donnerbart.example.SingleTest.xml; then
+            echo "Error: JUnit report TEST-de.donnerbart.example.SingleTest.xml is missing or invalid!"
+            ls -l
+            exit 1
+          fi
+
+      - name: Clean up JUnit reports branch
+        if: always()
+        run: |
+          git push origin --delete $BRANCH || true
+
   merge-junit-reports-with-new-branch:
     name: Merge JUnit reports with new branch
     runs-on: ubuntu-latest
