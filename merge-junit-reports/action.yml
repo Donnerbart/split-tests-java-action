@@ -71,6 +71,12 @@ runs:
           git push origin --set-upstream ${{ inputs.git-branch }}
         fi
 
+    - name: Download JUnit report artifacts
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+      with:
+        pattern: ${{ inputs.split-artifact-pattern }}
+        path: junit-reports-download
+
     - name: Merge JUnit report artifacts
       uses: actions/upload-artifact/merge@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
       with:
@@ -79,19 +85,14 @@ runs:
         delete-merged: ${{ inputs.split-artifact-delete-merged }}
         separate-directories: true
 
-    - name: Download JUnit reports artifact
-      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-      with:
-        name: ${{ inputs.artifact-name }}
-        path: junit-reports-download
-
     - name: Collect JUnit reports
       shell: bash
       run: |
         shopt -s nullglob
         mkdir -p junit-reports-artifact
         touch junit-reports-skipped.txt
-        for REPORT in junit-reports-download/*/*.xml; do
+        # a single matching artifact is downloaded into the path itself, multiple ones into subdirectories
+        for REPORT in junit-reports-download/*.xml junit-reports-download/*/*.xml; do
           FILE=$(basename "$REPORT")
           if [[ -f "junit-reports-artifact/$FILE" ]]; then
             echo "::warning::Skipping duplicate JUnit report $REPORT"
